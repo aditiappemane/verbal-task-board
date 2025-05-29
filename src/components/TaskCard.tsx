@@ -3,9 +3,10 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Task } from './TaskManager';
 import EditableField from './EditableField';
-import { Calendar, Clock, User, Trash2 } from 'lucide-react';
+import { Calendar, Clock, User, Trash2, CheckCircle } from 'lucide-react';
 
 interface TaskCardProps {
   task: Task;
@@ -25,6 +26,23 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onDelete, getPriori
     });
   };
 
+  const formatTime = (timeString: string) => {
+    if (!timeString) return '';
+    
+    // If it already has AM/PM, return as is
+    if (timeString.includes('AM') || timeString.includes('PM')) {
+      return timeString;
+    }
+    
+    // Convert 24-hour to 12-hour format
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    
+    return `${displayHour}:${minutes || '00'} ${period}`;
+  };
+
   const isOverdue = (dateString: string) => {
     if (!dateString) return false;
     const taskDate = new Date(dateString);
@@ -34,13 +52,25 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onDelete, getPriori
   };
 
   return (
-    <Card className="p-6 hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-white">
+    <Card className={`p-6 hover:shadow-lg transition-all duration-300 border-l-4 ${task.completed ? 'border-l-green-500 bg-green-50/50' : 'border-l-blue-500 bg-white'}`}>
       <div className="space-y-4">
-        {/* Header with priority and delete */}
+        {/* Header with priority, completion, and delete */}
         <div className="flex items-start justify-between">
-          <Badge className={`text-xs font-medium ${getPriorityColor(task.priority)}`}>
-            {task.priority}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Checkbox 
+              checked={task.completed}
+              onCheckedChange={(checked) => onUpdate(task.id, { completed: !!checked })}
+            />
+            <EditableField
+              value={task.priority}
+              onSave={(value) => onUpdate(task.id, { priority: value as 'P1' | 'P2' | 'P3' | 'P4' })}
+              fieldType="priority"
+            >
+              <Badge className={`text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                {task.priority}
+              </Badge>
+            </EditableField>
+          </div>
           <Button
             variant="ghost"
             size="sm"
@@ -56,7 +86,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onDelete, getPriori
           <EditableField
             value={task.name}
             onSave={(value) => onUpdate(task.id, { name: value })}
-            className="text-lg font-semibold text-gray-900 leading-tight"
+            className={`text-lg font-semibold leading-tight ${task.completed ? 'text-gray-500 line-through' : 'text-gray-900'}`}
             placeholder="Task name"
           />
         </div>
@@ -91,6 +121,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onDelete, getPriori
                 value={task.dueTime}
                 onSave={(value) => onUpdate(task.id, { dueTime: value })}
                 placeholder="Time"
+                displayValue={formatTime(task.dueTime)}
               />
             </div>
           )}

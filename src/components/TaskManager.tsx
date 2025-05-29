@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ export interface Task {
   dueDate: string;
   dueTime: string;
   priority: 'P1' | 'P2' | 'P3' | 'P4';
+  completed: boolean;
   createdAt: Date;
 }
 
@@ -36,6 +38,7 @@ const TaskManager = () => {
       const newTask: Task = {
         id: Date.now().toString(),
         ...parsedTask,
+        completed: false,
         createdAt: new Date(),
       };
 
@@ -148,10 +151,8 @@ const TaskManager = () => {
             <div className="text-red-100">High Priority</div>
           </Card>
           <Card className="p-4 bg-gradient-to-r from-green-500 to-green-600 text-white">
-            <div className="text-2xl font-bold">
-              {tasks.filter(t => new Date(t.dueDate) >= new Date()).length}
-            </div>
-            <div className="text-green-100">Upcoming</div>
+            <div className="text-2xl font-bold">{tasks.filter(t => t.completed).length}</div>
+            <div className="text-green-100">Completed</div>
           </Card>
         </div>
       )}

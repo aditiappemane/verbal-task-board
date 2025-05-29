@@ -3,6 +3,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -36,7 +37,19 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, onUpdate, onDelete, getPri
 
   const formatTime = (timeString: string) => {
     if (!timeString) return '-';
-    return timeString;
+    
+    // If it already has AM/PM, return as is
+    if (timeString.includes('AM') || timeString.includes('PM')) {
+      return timeString;
+    }
+    
+    // Convert 24-hour to 12-hour format
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    
+    return `${displayHour}:${minutes || '00'} ${period}`;
   };
 
   const isOverdue = (dateString: string) => {
@@ -52,6 +65,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, onUpdate, onDelete, getPri
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50">
+            <TableHead className="font-semibold text-gray-900 w-16">Status</TableHead>
             <TableHead className="font-semibold text-gray-900">Task</TableHead>
             <TableHead className="font-semibold text-gray-900">Assigned To</TableHead>
             <TableHead className="font-semibold text-gray-900">Due Date</TableHead>
@@ -63,12 +77,18 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, onUpdate, onDelete, getPri
         </TableHeader>
         <TableBody>
           {tasks.map((task) => (
-            <TableRow key={task.id} className="hover:bg-gray-50 transition-colors">
+            <TableRow key={task.id} className={`hover:bg-gray-50 transition-colors ${task.completed ? 'bg-green-50/30' : ''}`}>
+              <TableCell>
+                <Checkbox 
+                  checked={task.completed}
+                  onCheckedChange={(checked) => onUpdate(task.id, { completed: !!checked })}
+                />
+              </TableCell>
               <TableCell className="font-medium">
                 <EditableField
                   value={task.name}
                   onSave={(value) => onUpdate(task.id, { name: value })}
-                  className="font-semibold text-gray-900"
+                  className={`font-semibold ${task.completed ? 'text-gray-500 line-through' : 'text-gray-900'}`}
                   placeholder="Task name"
                 />
               </TableCell>
@@ -99,9 +119,15 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, onUpdate, onDelete, getPri
                 />
               </TableCell>
               <TableCell>
-                <Badge className={`text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                  {task.priority}
-                </Badge>
+                <EditableField
+                  value={task.priority}
+                  onSave={(value) => onUpdate(task.id, { priority: value as 'P1' | 'P2' | 'P3' | 'P4' })}
+                  fieldType="priority"
+                >
+                  <Badge className={`text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                    {task.priority}
+                  </Badge>
+                </EditableField>
               </TableCell>
               <TableCell className="text-sm text-gray-500">
                 {task.createdAt.toLocaleDateString()}

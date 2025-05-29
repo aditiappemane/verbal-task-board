@@ -119,10 +119,12 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
           const month = monthMap[monthName];
           
           if (month !== undefined) {
-            const parsedDate = new Date(currentYear, month, day);
+            // Use UTC to avoid timezone issues
+            const parsedDate = new Date(Date.UTC(currentYear, month, day));
             // If the date has passed this year, assume next year
-            if (parsedDate < today) {
-              parsedDate.setFullYear(currentYear + 1);
+            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+            if (parsedDate < todayUTC) {
+              parsedDate.setUTCFullYear(currentYear + 1);
             }
             dueDate = parsedDate.toISOString().split('T')[0];
           }
@@ -133,23 +135,14 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
           const month = monthMap[monthName];
           
           if (month !== undefined) {
-            const parsedDate = new Date(currentYear, month, day);
+            // Use UTC to avoid timezone issues
+            const parsedDate = new Date(Date.UTC(currentYear, month, day));
             // If the date has passed this year, assume next year
-            if (parsedDate < today) {
-              parsedDate.setFullYear(currentYear + 1);
+            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+            if (parsedDate < todayUTC) {
+              parsedDate.setUTCFullYear(currentYear + 1);
             }
             dueDate = parsedDate.toISOString().split('T')[0];
-          }
-        } else {
-          // Try to parse other date formats
-          try {
-            const parsedDate = new Date(match);
-            if (!isNaN(parsedDate.getTime())) {
-              dueDate = parsedDate.toISOString().split('T')[0];
-            }
-          } catch (e) {
-            // If parsing fails, set to today
-            dueDate = today.toISOString().split('T')[0];
           }
         }
       }
@@ -195,13 +188,13 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
     }
   }
 
-  // Extract task name (everything before assignee/date/time keywords)
+  // Extract task name (everything before assignee/date/time keywords) - IMPROVED
   let taskText = input;
   
   // Remove time, date, priority, and assignee information to get clean task name
   const removePatterns = [
     /\b(p[1-4])\b/gi,
-    /\b(?:assign(?:ed)?\s+to|for|by)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/gi,
+    /\b(?:assign(?:ed)?\s+to|for)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/gi,
     /\b(?:today|tomorrow|yesterday)\b/gi,
     /\b(?:next|this)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|week|month)\b/gi,
     /\b(?:at|by)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/gi,
@@ -209,6 +202,8 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
     /\b(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{1,2}(?:st|nd|rd|th)?\b/gi,
     /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/g,
     /\b\d{1,2}-\d{1,2}-\d{2,4}\b/g,
+    // Remove "by" at the end of sentences
+    /\s+by\s*$/gi,
   ];
 
   for (const pattern of removePatterns) {

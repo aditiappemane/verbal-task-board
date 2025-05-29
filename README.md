@@ -1,73 +1,158 @@
-# Welcome to your Lovable project
 
-## Project info
+# Natural Language Task Manager
 
-**URL**: https://lovable.dev/projects/94eecc34-bb2e-4e61-b2a6-2d8d94f23cd9
+An enterprise-grade task management application that allows users to create tasks using natural language input. Simply type or speak tasks like "Finish landing page by 20th June 11pm" and the app will intelligently parse the task name, assignee, due date, time, and priority.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Natural Language Processing**: Add tasks using conversational language
+- **Voice Input**: Use speech-to-text for hands-free task creation
+- **Smart Parsing**: Automatically extracts task details including:
+  - Task name
+  - Assignee
+  - Due date and time
+  - Priority level (P1-P4)
+- **Dual View Modes**: Switch between card and table layouts
+- **Inline Editing**: Edit any task field directly in the UI
+- **Task Completion**: Mark tasks as complete with checkbox
+- **Real-time Stats**: Track total tasks, high priority items, and completed tasks
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 
-**Use Lovable**
+## Technology Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/94eecc34-bb2e-4e61-b2a6-2d8d94f23cd9) and start prompting.
+- **Frontend**: React 18 with TypeScript
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **Build Tool**: Vite
+- **Icons**: Lucide React
+- **State Management**: React hooks
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js (version 16 or higher)
+- npm or yarn package manager
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
+1. **Clone the repository**
+   ```bash
+   git clone <your-repository-url>
+   cd natural-language-task-manager
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. **Open your browser**
+   Navigate to `http://localhost:5173` to see the application running.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Build for Production
+
+To create a production build:
+
+```bash
+npm run build
 ```
 
-**Edit a file directly in GitHub**
+To preview the production build:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+npm run preview
+```
 
-**Use GitHub Codespaces**
+## Usage Examples
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Adding Tasks
 
-## What technologies are used for this project?
+The app understands natural language input. Here are some examples:
 
-This project is built with:
+- `"Finish landing page by 20th June 11pm"` 
+  - Task: "Finish landing page"
+  - Due: June 20th at 11:00 PM
+  - Priority: P3 (default)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- `"Call client Rajeev tomorrow 5pm P1"`
+  - Task: "Call client"
+  - Assignee: "Rajeev"
+  - Due: Tomorrow at 5:00 PM
+  - Priority: P1
 
-## How can I deploy this project?
+- `"Complete report John by Friday 2pm P2"`
+  - Task: "Complete report"
+  - Assignee: "John"
+  - Due: Friday at 2:00 PM
+  - Priority: P2
 
-Simply open [Lovable](https://lovable.dev/projects/94eecc34-bb2e-4e61-b2a6-2d8d94f23cd9) and click on Share -> Publish.
+### Voice Input
 
-## Can I connect a custom domain to my Lovable project?
+1. Click the microphone icon in the input field
+2. Speak your task naturally
+3. The app will convert speech to text and parse the task
 
-Yes, you can!
+### Editing Tasks
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- Click on any field in the task cards or table to edit
+- For priority, a dropdown will appear with P1-P4 options
+- For dates, a date picker will be available
+- Changes are saved automatically when you click away or press Enter
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Task Management
+
+- **Mark Complete**: Use the checkbox to mark tasks as done
+- **Delete Tasks**: Click the trash icon to remove tasks
+- **View Modes**: Switch between card and table views using the tabs
+- **Track Progress**: Monitor your progress with the stats dashboard
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── ui/                 # shadcn/ui components
+│   ├── TaskManager.tsx     # Main task management component
+│   ├── TaskCard.tsx        # Individual task card component
+│   ├── TaskTable.tsx       # Table view component
+│   ├── EditableField.tsx   # Inline editing component
+│   └── VoiceInput.tsx      # Voice input component
+├── utils/
+│   └── taskParser.ts       # Natural language parsing logic
+├── pages/
+│   └── Index.tsx           # Main page component
+└── hooks/
+    └── use-toast.ts        # Toast notification hook
+```
+
+## Natural Language Parsing
+
+The app uses sophisticated regex patterns and date parsing to understand:
+
+- **Dates**: "tomorrow", "20th June", "next Friday", "June 20th"
+- **Times**: "11pm", "2:30pm", "14:30", "5 o'clock"
+- **Assignees**: Capitalized names that aren't common words
+- **Priorities**: "P1", "P2", "P3", "P4" keywords
+- **Task Names**: Everything else after removing parsed elements
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Commit your changes (`git commit -m 'Add some amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+If you encounter any issues or have questions, please open an issue on the GitHub repository.

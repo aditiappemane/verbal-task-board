@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 interface EditableFieldProps {
@@ -10,6 +11,7 @@ interface EditableFieldProps {
   placeholder?: string;
   type?: string;
   displayValue?: string;
+  fieldType?: 'text' | 'date' | 'time' | 'priority';
 }
 
 const EditableField: React.FC<EditableFieldProps> = ({
@@ -19,6 +21,7 @@ const EditableField: React.FC<EditableFieldProps> = ({
   placeholder = '',
   type = 'text',
   displayValue,
+  fieldType = 'text',
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -29,11 +32,11 @@ const EditableField: React.FC<EditableFieldProps> = ({
   }, [value]);
 
   useEffect(() => {
-    if (isEditing && inputRef.current) {
+    if (isEditing && inputRef.current && fieldType !== 'priority') {
       inputRef.current.focus();
       inputRef.current.select();
     }
-  }, [isEditing]);
+  }, [isEditing, fieldType]);
 
   const handleSave = () => {
     if (editValue.trim() !== value) {
@@ -56,6 +59,22 @@ const EditableField: React.FC<EditableFieldProps> = ({
   };
 
   if (isEditing) {
+    if (fieldType === 'priority') {
+      return (
+        <Select value={editValue} onValueChange={(value) => { setEditValue(value); onSave(value); setIsEditing(false); }}>
+          <SelectTrigger className="w-20 h-auto p-1 border-blue-300 focus:border-blue-500">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="P1">P1</SelectItem>
+            <SelectItem value="P2">P2</SelectItem>
+            <SelectItem value="P3">P3</SelectItem>
+            <SelectItem value="P4">P4</SelectItem>
+          </SelectContent>
+        </Select>
+      );
+    }
+
     return (
       <Input
         ref={inputRef}
