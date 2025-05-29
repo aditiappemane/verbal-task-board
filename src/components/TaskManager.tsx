@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -139,7 +138,7 @@ const TaskManager = () => {
 
       {/* Stats */}
       {tasks.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <div className="text-2xl font-bold">{tasks.length}</div>
             <div className="text-blue-100">Total Tasks</div>
@@ -153,12 +152,6 @@ const TaskManager = () => {
               {tasks.filter(t => new Date(t.dueDate) >= new Date()).length}
             </div>
             <div className="text-green-100">Upcoming</div>
-          </Card>
-          <Card className="p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-            <div className="text-2xl font-bold">
-              {[...new Set(tasks.map(t => t.assignee))].length}
-            </div>
-            <div className="text-purple-100">Team Members</div>
           </Card>
         </div>
       )}

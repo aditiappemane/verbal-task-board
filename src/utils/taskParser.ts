@@ -26,13 +26,15 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
     priority = priorityMatch[1].toUpperCase() as 'P1' | 'P2' | 'P3' | 'P4';
   }
 
-  // Extract time patterns (more comprehensive)
+  // Extract time patterns (improved for better matching)
   const timePatterns = [
-    /\b(\d{1,2})\s*:\s*(\d{2})\s*(am|pm|AM|PM)\b/,
-    /\b(\d{1,2})\s*(am|pm|AM|PM)\b/,
+    /\b(\d{1,2})\s*:\s*(\d{2})\s*(am|pm)\b/i,
+    /\b(\d{1,2})\s*(am|pm)\b/i,
     /\b(\d{1,2})\s*:\s*(\d{2})\b/,
-    /\bat\s+(\d{1,2})\s*(am|pm|AM|PM)\b/,
-    /\bby\s+(\d{1,2})\s*(am|pm|AM|PM)\b/,
+    /\bat\s+(\d{1,2})\s*:\s*(\d{2})\s*(am|pm)\b/i,
+    /\bby\s+(\d{1,2})\s*:\s*(\d{2})\s*(am|pm)\b/i,
+    /\bat\s+(\d{1,2})\s*(am|pm)\b/i,
+    /\bby\s+(\d{1,2})\s*(am|pm)\b/i,
   ];
 
   for (const pattern of timePatterns) {
@@ -44,22 +46,22 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
         const minute = timeMatch[2] || '00';
         const period = timeMatch[3].toUpperCase();
         dueTime = `${hour}:${minute} ${period}`;
-      } else if (timeMatch[2]) {
+      } else if (timeMatch[2] && !timeMatch[3]) {
+        // Format: 23:30 (24-hour)
+        dueTime = `${timeMatch[1]}:${timeMatch[2]}`;
+      } else {
         // Format: 11pm (no minutes)
         const hour = parseInt(timeMatch[1]);
-        const period = timeMatch[2].toUpperCase();
-        dueTime = `${hour}:00 ${period}`;
-      } else {
-        // Format: 23:30 (24-hour)
-        dueTime = `${timeMatch[1]}:${timeMatch[2] || '00'}`;
+        const period = timeMatch[2] ? timeMatch[2].toUpperCase() : '';
+        dueTime = period ? `${hour}:00 ${period}` : `${hour}:00`;
       }
       break;
     }
   }
 
-  // Extract date patterns (more comprehensive)
+  // Improved date patterns with better month matching
   const datePatterns = [
-    // Specific dates
+    // Specific dates like "20th June", "June 20th", etc.
     /\b(\d{1,2})(st|nd|rd|th)?\s+(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i,
     /\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+(\d{1,2})(st|nd|rd|th)?\b/i,
     /\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b/,
@@ -73,7 +75,16 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
   ];
 
   const today = new Date();
+  const currentYear = today.getFullYear();
   let foundDate = false;
+
+  // Month name mapping
+  const monthMap: { [key: string]: number } = {
+    'january': 0, 'jan': 0, 'february': 1, 'feb': 1, 'march': 2, 'mar': 2,
+    'april': 3, 'apr': 3, 'may': 4, 'june': 5, 'jun': 5,
+    'july': 6, 'jul': 6, 'august': 7, 'aug': 7, 'september': 8, 'sep': 8,
+    'october': 9, 'oct': 9, 'november': 10, 'nov': 10, 'december': 11, 'dec': 11
+  };
 
   for (const pattern of datePatterns) {
     const dateMatch = input.match(pattern);
@@ -100,15 +111,46 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
         nextMonth.setMonth(nextMonth.getMonth() + 1);
         dueDate = nextMonth.toISOString().split('T')[0];
       } else {
-        // Try to parse the date
-        try {
-          const parsedDate = new Date(match);
-          if (!isNaN(parsedDate.getTime())) {
+        // Handle specific date formats like "20th June"
+        if (dateMatch[1] && dateMatch[3]) {
+          // Pattern: day + month (e.g., "20th June")
+          const day = parseInt(dateMatch[1]);
+          const monthName = dateMatch[3].toLowerCase();
+          const month = monthMap[monthName];
+          
+          if (month !== undefined) {
+            const parsedDate = new Date(currentYear, month, day);
+            // If the date has passed this year, assume next year
+            if (parsedDate < today) {
+              parsedDate.setFullYear(currentYear + 1);
+            }
             dueDate = parsedDate.toISOString().split('T')[0];
           }
-        } catch (e) {
-          // If parsing fails, set to today
-          dueDate = today.toISOString().split('T')[0];
+        } else if (dateMatch[1] && dateMatch[2]) {
+          // Pattern: month + day (e.g., "June 20th")
+          const monthName = dateMatch[1].toLowerCase();
+          const day = parseInt(dateMatch[2]);
+          const month = monthMap[monthName];
+          
+          if (month !== undefined) {
+            const parsedDate = new Date(currentYear, month, day);
+            // If the date has passed this year, assume next year
+            if (parsedDate < today) {
+              parsedDate.setFullYear(currentYear + 1);
+            }
+            dueDate = parsedDate.toISOString().split('T')[0];
+          }
+        } else {
+          // Try to parse other date formats
+          try {
+            const parsedDate = new Date(match);
+            if (!isNaN(parsedDate.getTime())) {
+              dueDate = parsedDate.toISOString().split('T')[0];
+            }
+          } catch (e) {
+            // If parsing fails, set to today
+            dueDate = today.toISOString().split('T')[0];
+          }
         }
       }
       break;
@@ -128,7 +170,7 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
   ];
 
   // Also look for standalone names (capitalized words that aren't common words)
-  const commonWords = ['call', 'finish', 'complete', 'send', 'email', 'meeting', 'task', 'project', 'report', 'by', 'at', 'on', 'in', 'the', 'and', 'or', 'but', 'for', 'with', 'from', 'to'];
+  const commonWords = ['call', 'finish', 'complete', 'send', 'email', 'meeting', 'task', 'project', 'report', 'by', 'at', 'on', 'in', 'the', 'and', 'or', 'but', 'for', 'with', 'from', 'to', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
   const words = input.split(/\s+/);
   
   for (const pattern of assigneePatterns) {
@@ -162,7 +204,7 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
     /\b(?:assign(?:ed)?\s+to|for|by)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/gi,
     /\b(?:today|tomorrow|yesterday)\b/gi,
     /\b(?:next|this)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|week|month)\b/gi,
-    /\b(?:at|by)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?\b/gi,
+    /\b(?:at|by)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/gi,
     /\b\d{1,2}(?:st|nd|rd|th)?\s+(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/gi,
     /\b(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{1,2}(?:st|nd|rd|th)?\b/gi,
     /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/g,
