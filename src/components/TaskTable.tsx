@@ -90,6 +90,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, onUpdate, onDelete, getPri
                   onSave={(value) => onUpdate(task.id, { name: value })}
                   className={`font-semibold ${task.completed ? 'text-gray-500 line-through' : 'text-gray-900'}`}
                   placeholder="Task name"
+                  disabled={task.completed}
                 />
               </TableCell>
               <TableCell>
@@ -98,6 +99,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, onUpdate, onDelete, getPri
                   onSave={(value) => onUpdate(task.id, { assignee: value })}
                   className="text-gray-700"
                   placeholder="Assignee"
+                  disabled={task.completed}
                 />
               </TableCell>
               <TableCell>
@@ -107,6 +109,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, onUpdate, onDelete, getPri
                   type="date"
                   className={`${isOverdue(task.dueDate) ? 'text-red-600 font-medium' : 'text-gray-700'}`}
                   displayValue={formatDate(task.dueDate)}
+                  disabled={task.completed}
                 />
               </TableCell>
               <TableCell>
@@ -116,6 +119,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, onUpdate, onDelete, getPri
                   className="text-gray-700"
                   placeholder="Set time"
                   displayValue={formatTime(task.dueTime)}
+                  disabled={task.completed}
                 />
               </TableCell>
               <TableCell>
@@ -123,6 +127,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, onUpdate, onDelete, getPri
                   value={task.priority}
                   onSave={(value) => onUpdate(task.id, { priority: value as 'P1' | 'P2' | 'P3' | 'P4' })}
                   fieldType="priority"
+                  disabled={task.completed}
                 >
                   <Badge className={`text-xs font-medium ${getPriorityColor(task.priority)}`}>
                     {task.priority}

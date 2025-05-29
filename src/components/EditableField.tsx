@@ -13,6 +13,7 @@ interface EditableFieldProps {
   displayValue?: string;
   fieldType?: 'text' | 'date' | 'time' | 'priority';
   children?: React.ReactNode;
+  disabled?: boolean;
 }
 
 const EditableField: React.FC<EditableFieldProps> = ({
@@ -24,6 +25,7 @@ const EditableField: React.FC<EditableFieldProps> = ({
   displayValue,
   fieldType = 'text',
   children,
+  disabled = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -59,6 +61,22 @@ const EditableField: React.FC<EditableFieldProps> = ({
       handleCancel();
     }
   };
+
+  // If disabled, show as non-editable
+  if (disabled) {
+    if (children) {
+      return (
+        <span className={cn('opacity-60', className)}>
+          {children}
+        </span>
+      );
+    }
+    return (
+      <span className={cn('opacity-60', className)}>
+        {displayValue || value || placeholder || 'Click to edit'}
+      </span>
+    );
+  }
 
   if (isEditing) {
     if (fieldType === 'priority') {

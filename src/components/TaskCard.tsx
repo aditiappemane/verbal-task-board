@@ -65,6 +65,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onDelete, getPriori
               value={task.priority}
               onSave={(value) => onUpdate(task.id, { priority: value as 'P1' | 'P2' | 'P3' | 'P4' })}
               fieldType="priority"
+              disabled={task.completed}
             >
               <Badge className={`text-xs font-medium ${getPriorityColor(task.priority)}`}>
                 {task.priority}
@@ -88,6 +89,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onDelete, getPriori
             onSave={(value) => onUpdate(task.id, { name: value })}
             className={`text-lg font-semibold leading-tight ${task.completed ? 'text-gray-500 line-through' : 'text-gray-900'}`}
             placeholder="Task name"
+            disabled={task.completed}
           />
         </div>
 
@@ -99,6 +101,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onDelete, getPriori
             onSave={(value) => onUpdate(task.id, { assignee: value })}
             className="font-medium"
             placeholder="Assignee"
+            disabled={task.completed}
           />
         </div>
 
@@ -112,6 +115,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onDelete, getPriori
               type="date"
               className={isOverdue(task.dueDate) ? 'text-red-600 font-medium' : ''}
               displayValue={formatDate(task.dueDate)}
+              disabled={task.completed}
             />
           </div>
           {task.dueTime && (
@@ -122,6 +126,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onDelete, getPriori
                 onSave={(value) => onUpdate(task.id, { dueTime: value })}
                 placeholder="Time"
                 displayValue={formatTime(task.dueTime)}
+                disabled={task.completed}
               />
             </div>
           )}

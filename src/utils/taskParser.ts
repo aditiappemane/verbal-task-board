@@ -48,7 +48,11 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
         dueTime = `${hour}:${minute} ${period}`;
       } else if (timeMatch[2] && !timeMatch[3]) {
         // Format: 23:30 (24-hour)
-        dueTime = `${timeMatch[1]}:${timeMatch[2]}`;
+        const hour = parseInt(timeMatch[1]);
+        const minute = timeMatch[2];
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        dueTime = `${displayHour}:${minute} ${period}`;
       } else {
         // Format: 11pm (no minutes)
         const hour = parseInt(timeMatch[1]);
@@ -119,12 +123,10 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
           const month = monthMap[monthName];
           
           if (month !== undefined) {
-            // Use UTC to avoid timezone issues
-            const parsedDate = new Date(Date.UTC(currentYear, month, day));
+            const parsedDate = new Date(currentYear, month, day);
             // If the date has passed this year, assume next year
-            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
-            if (parsedDate < todayUTC) {
-              parsedDate.setUTCFullYear(currentYear + 1);
+            if (parsedDate < today) {
+              parsedDate.setFullYear(currentYear + 1);
             }
             dueDate = parsedDate.toISOString().split('T')[0];
           }
@@ -135,12 +137,10 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
           const month = monthMap[monthName];
           
           if (month !== undefined) {
-            // Use UTC to avoid timezone issues
-            const parsedDate = new Date(Date.UTC(currentYear, month, day));
+            const parsedDate = new Date(currentYear, month, day);
             // If the date has passed this year, assume next year
-            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
-            if (parsedDate < todayUTC) {
-              parsedDate.setUTCFullYear(currentYear + 1);
+            if (parsedDate < today) {
+              parsedDate.setFullYear(currentYear + 1);
             }
             dueDate = parsedDate.toISOString().split('T')[0];
           }
@@ -188,22 +188,29 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
     }
   }
 
-  // Extract task name (everything before assignee/date/time keywords) - IMPROVED
+  // Extract task name - IMPROVED logic to get clean task name
   let taskText = input;
   
-  // Remove time, date, priority, and assignee information to get clean task name
+  // Remove specific patterns to get clean task name
   const removePatterns = [
+    // Remove priority
     /\b(p[1-4])\b/gi,
+    // Remove assignee patterns
     /\b(?:assign(?:ed)?\s+to|for)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/gi,
+    // Remove date patterns
     /\b(?:today|tomorrow|yesterday)\b/gi,
     /\b(?:next|this)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|week|month)\b/gi,
-    /\b(?:at|by)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/gi,
     /\b\d{1,2}(?:st|nd|rd|th)?\s+(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/gi,
     /\b(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{1,2}(?:st|nd|rd|th)?\b/gi,
     /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/g,
     /\b\d{1,2}-\d{1,2}-\d{2,4}\b/g,
-    // Remove "by" at the end of sentences
+    // Remove time patterns
+    /\b(?:at|by)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/gi,
+    /\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi,
+    // Remove trailing "by" and other prepositions
     /\s+by\s*$/gi,
+    /\s+at\s*$/gi,
+    /\s+on\s*$/gi,
   ];
 
   for (const pattern of removePatterns) {
