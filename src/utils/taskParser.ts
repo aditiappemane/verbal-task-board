@@ -28,13 +28,13 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
 
   // Extract time patterns (improved for better matching)
   const timePatterns = [
-    /\b(\d{1,2})\s*:\s*(\d{2})\s*(am|pm)\b/i,
-    /\b(\d{1,2})\s*(am|pm)\b/i,
+    /\b(\d{1,2})\s*:\s*(\d{2})\s*(a\.?m\.?|p\.?m\.?)\b/i,
+    /\b(\d{1,2})\s*(a\.?m\.?|p\.?m\.?)\b/i,
     /\b(\d{1,2})\s*:\s*(\d{2})\b/,
-    /\bat\s+(\d{1,2})\s*:\s*(\d{2})\s*(am|pm)\b/i,
-    /\bby\s+(\d{1,2})\s*:\s*(\d{2})\s*(am|pm)\b/i,
-    /\bat\s+(\d{1,2})\s*(am|pm)\b/i,
-    /\bby\s+(\d{1,2})\s*(am|pm)\b/i,
+    /\bat\s+(\d{1,2})\s*:\s*(\d{2})\s*(a\.?m\.?|p\.?m\.?)\b/i,
+    /\bby\s+(\d{1,2})\s*:\s*(\d{2})\s*(a\.?m\.?|p\.?m\.?)\b/i,
+    /\bat\s+(\d{1,2})\s*(a\.?m\.?|p\.?m\.?)\b/i,
+    /\bby\s+(\d{1,2})\s*(a\.?m\.?|p\.?m\.?)\b/i,
   ];
 
   for (const pattern of timePatterns) {
@@ -44,7 +44,8 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
         // Format: 11pm or 11:30pm
         const hour = parseInt(timeMatch[1]);
         const minute = timeMatch[2] || '00';
-        const period = timeMatch[3].toUpperCase();
+        const periodRaw = timeMatch[3].toLowerCase().replace(/\./g, '');
+        const period = periodRaw.includes('p') ? 'PM' : 'AM';
         dueTime = `${hour}:${minute} ${period}`;
       } else if (timeMatch[2] && !timeMatch[3]) {
         // Format: 23:30 (24-hour)
@@ -56,9 +57,11 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
       } else {
         // Format: 11pm (no minutes)
         const hour = parseInt(timeMatch[1]);
-        const period = timeMatch[2] ? timeMatch[2].toUpperCase() : '';
+        const periodRaw = timeMatch[2] ? timeMatch[2].toLowerCase().replace(/\./g, '') : '';
+        const period = periodRaw.includes('p') ? 'PM' : periodRaw.includes('a') ? 'AM' : '';
         dueTime = period ? `${hour}:00 ${period}` : `${hour}:00`;
       }
+      console.log('Matched time:', timeMatch, 'Result:', dueTime);
       break;
     }
   }
@@ -123,10 +126,12 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
           const month = monthMap[monthName];
           
           if (month !== undefined) {
-            const parsedDate = new Date(currentYear, month, day);
+            // Create date with UTC to avoid timezone issues
+            const parsedDate = new Date(Date.UTC(currentYear, month, day));
             // If the date has passed this year, assume next year
-            if (parsedDate < today) {
-              parsedDate.setFullYear(currentYear + 1);
+            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+            if (parsedDate < todayUTC) {
+              parsedDate.setUTCFullYear(currentYear + 1);
             }
             dueDate = parsedDate.toISOString().split('T')[0];
           }
@@ -137,15 +142,18 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
           const month = monthMap[monthName];
           
           if (month !== undefined) {
-            const parsedDate = new Date(currentYear, month, day);
+            // Create date with UTC to avoid timezone issues
+            const parsedDate = new Date(Date.UTC(currentYear, month, day));
             // If the date has passed this year, assume next year
-            if (parsedDate < today) {
-              parsedDate.setFullYear(currentYear + 1);
+            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+            if (parsedDate < todayUTC) {
+              parsedDate.setUTCFullYear(currentYear + 1);
             }
             dueDate = parsedDate.toISOString().split('T')[0];
           }
         }
       }
+      console.log('Matched date:', dateMatch, 'Result:', dueDate);
       break;
     }
   }
@@ -204,13 +212,14 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
     /\b(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{1,2}(?:st|nd|rd|th)?\b/gi,
     /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/g,
     /\b\d{1,2}-\d{1,2}-\d{2,4}\b/g,
-    // Remove time patterns
-    /\b(?:at|by)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/gi,
-    /\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi,
-    // Remove trailing "by" and other prepositions
+    // Remove time patterns (improved to catch various formats)
+    /\b(?:at|by)\s+\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)?\b/gi,
+    /\b\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)\b/gi,
+    // Remove trailing prepositions and "by" phrases
     /\s+by\s*$/gi,
     /\s+at\s*$/gi,
     /\s+on\s*$/gi,
+    /\s+by\s+\d/gi,
   ];
 
   for (const pattern of removePatterns) {
