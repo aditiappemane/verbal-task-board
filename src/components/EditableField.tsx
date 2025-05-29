@@ -12,6 +12,7 @@ interface EditableFieldProps {
   type?: string;
   displayValue?: string;
   fieldType?: 'text' | 'date' | 'time' | 'priority';
+  children?: React.ReactNode;
 }
 
 const EditableField: React.FC<EditableFieldProps> = ({
@@ -22,6 +23,7 @@ const EditableField: React.FC<EditableFieldProps> = ({
   type = 'text',
   displayValue,
   fieldType = 'text',
+  children,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -86,6 +88,22 @@ const EditableField: React.FC<EditableFieldProps> = ({
         className="min-w-0 h-auto p-1 border-blue-300 focus:border-blue-500"
         placeholder={placeholder}
       />
+    );
+  }
+
+  // If children are provided (like Badge component), render them; otherwise show the default display
+  if (children) {
+    return (
+      <span
+        onClick={() => setIsEditing(true)}
+        className={cn(
+          'cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5 transition-colors min-h-[1.5rem] inline-block',
+          className
+        )}
+        title="Click to edit"
+      >
+        {children}
+      </span>
     );
   }
 
