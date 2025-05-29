@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,18 +27,15 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onDelete, getPriori
 
   const formatTime = (timeString: string) => {
     if (!timeString) return '';
-    
-    // If it already has AM/PM, return as is
-    if (timeString.includes('AM') || timeString.includes('PM')) {
-      return timeString;
+    // If it already has AM/PM (with or without space), return as is
+    if (/am|pm/i.test(timeString)) {
+      return timeString.replace(/\s+/g, ' ').toUpperCase();
     }
-    
     // Convert 24-hour to 12-hour format
     const [hours, minutes] = timeString.split(':');
     const hour = parseInt(hours);
     const period = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    
     return `${displayHour}:${minutes || '00'} ${period}`;
   };
 

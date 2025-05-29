@@ -1,4 +1,3 @@
-
 export interface ParsedTask {
   name: string;
   assignee: string;
@@ -29,7 +28,7 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
   // Extract time patterns (improved for better matching)
   const timePatterns = [
     /\b(\d{1,2})\s*:\s*(\d{2})\s*(a\.?m\.?|p\.?m\.?)\b/i,
-    /\b(\d{1,2})\s*(a\.?m\.?|p\.?m\.?)\b/i,
+    /\b(\d{1,2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)\b/i,  // This pattern should match both "5pm" and "5:30pm"
     /\b(\d{1,2})\s*:\s*(\d{2})\b/,
     /\bat\s+(\d{1,2})\s*:\s*(\d{2})\s*(a\.?m\.?|p\.?m\.?)\b/i,
     /\bby\s+(\d{1,2})\s*:\s*(\d{2})\s*(a\.?m\.?|p\.?m\.?)\b/i,
@@ -37,16 +36,34 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
     /\bby\s+(\d{1,2})\s*(a\.?m\.?|p\.?m\.?)\b/i,
   ];
 
+  console.log('Input text:', input);
+  console.log('Looking for time patterns...');
+
   for (const pattern of timePatterns) {
     const timeMatch = input.match(pattern);
     if (timeMatch) {
+      console.log('Found time match:', timeMatch);
+      console.log('Match groups:', timeMatch.slice(1));
+      
       if (timeMatch[3]) {
         // Format: 11pm or 11:30pm
-        const hour = parseInt(timeMatch[1]);
+        let hour = parseInt(timeMatch[1]);
         const minute = timeMatch[2] || '00';
         const periodRaw = timeMatch[3].toLowerCase().replace(/\./g, '');
         const period = periodRaw.includes('p') ? 'PM' : 'AM';
-        dueTime = `${hour}:${minute} ${period}`;
+        
+        console.log('Parsing with minutes:', { hour, minute, periodRaw, period });
+        
+        // Convert hour to 24-hour format if PM
+        if (period === 'PM' && hour < 12) {
+          hour += 12;
+        } else if (period === 'AM' && hour === 12) {
+          hour = 0;
+        }
+        
+        // Convert back to 12-hour format for display
+        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        dueTime = `${displayHour}:${minute} ${period}`;
       } else if (timeMatch[2] && !timeMatch[3]) {
         // Format: 23:30 (24-hour)
         const hour = parseInt(timeMatch[1]);
@@ -56,12 +73,24 @@ export const parseNaturalLanguageTask = (input: string): ParsedTask => {
         dueTime = `${displayHour}:${minute} ${period}`;
       } else {
         // Format: 11pm (no minutes)
-        const hour = parseInt(timeMatch[1]);
+        let hour = parseInt(timeMatch[1]);
         const periodRaw = timeMatch[2] ? timeMatch[2].toLowerCase().replace(/\./g, '') : '';
         const period = periodRaw.includes('p') ? 'PM' : periodRaw.includes('a') ? 'AM' : '';
-        dueTime = period ? `${hour}:00 ${period}` : `${hour}:00`;
+        
+        console.log('Parsing without minutes:', { hour, periodRaw, period });
+        
+        // Convert hour to 24-hour format if PM
+        if (period === 'PM' && hour < 12) {
+          hour += 12;
+        } else if (period === 'AM' && hour === 12) {
+          hour = 0;
+        }
+        
+        // Convert back to 12-hour format for display
+        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        dueTime = `${displayHour}:00 ${period}`;
       }
-      console.log('Matched time:', timeMatch, 'Result:', dueTime);
+      console.log('Final parsed time:', dueTime);
       break;
     }
   }

@@ -95,7 +95,7 @@ const TaskManager = () => {
           Task Manager
         </h1>
         <p className="text-gray-600 text-lg">
-          Add tasks using natural language. Say things like "Call John tomorrow at 2pm" or "Finish report by Friday"
+          {/* Add tasks using natural language. Say things like "Call John tomorrow at 2pm" or "Finish report by Friday" */}
         </p>
       </div>
 
